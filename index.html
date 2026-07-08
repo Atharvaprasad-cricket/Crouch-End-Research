@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Middlesex CCL Scouting</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1f3864">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CCL Scouting">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="./icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0; background: #f4f6f8; color: #1a2332;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  #app { max-width: 1180px; margin: 0 auto; padding: 20px 20px 60px; }
+  header.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+  header.top h1 { font-size: 22px; margin: 0 0 4px; color: #10233f; }
+  header.top .meta { font-size: 13px; color: #5a6a7e; }
+  select#teamSelect {
+    padding: 8px 12px; font-size: 14px; border-radius: 8px; border: 1px solid #c7d0da;
+    background: #fff; color: #1a2332;
+  }
+  .fixture-banner {
+    background: linear-gradient(135deg, #10233f, #1f3864); color: #fff; border-radius: 12px;
+    padding: 14px 18px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+  }
+  .fixture-banner .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; }
+  .fixture-banner .value { font-size: 17px; font-weight: 600; }
+  nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; border-bottom: 2px solid #e1e6ec; }
+  nav.tabs button {
+    appearance: none; border: none; background: none; padding: 10px 16px; font-size: 14px; font-weight: 600;
+    color: #5a6a7e; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px;
+  }
+  nav.tabs button.active { color: #1f3864; border-bottom-color: #1f3864; }
+  section.panel { display: none; }
+  section.panel.active { display: block; }
+  .card { background: #fff; border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(16,35,63,0.08); }
+  .card h2 { font-size: 16px; margin: 0 0 6px; color: #10233f; }
+  .card p.desc { font-size: 13px; color: #5a6a7e; margin: 0 0 14px; line-height: 1.5; }
+  .stat-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stat-box { flex: 1; min-width: 130px; background: #f7f9fb; border-radius: 10px; padding: 12px 14px; border: 1px solid #eaeef2; }
+  .stat-box .n { font-size: 22px; font-weight: 700; color: #1f3864; }
+  .stat-box .l { font-size: 12px; color: #5a6a7e; margin-top: 2px; }
+  .chart-wrap { position: relative; height: 260px; margin-bottom: 6px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+  .badge.high { background: #dff3e3; color: #1e7b3a; }
+  .badge.medium { background: #fdf1d6; color: #8a6100; }
+  .badge.low { background: #fbe4e2; color: #a3352a; }
+  .badge.none { background: #ececec; color: #777; }
+  table.plain { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.plain th { text-align: left; background: #1f3864; color: #fff; padding: 8px 10px; }
+  table.plain td { padding: 7px 10px; border-bottom: 1px solid #eef1f4; }
+  table.plain tr:nth-child(even) td { background: #f7f9fb; }
+  .footer-note { font-size: 12px; color: #8390a1; text-align: center; margin-top: 24px; line-height: 1.6; }
+  .batsman-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .batsman-picker button {
+    border: 1px solid #c7d0da; background: #fff; padding: 6px 12px; border-radius: 100px; font-size: 12px;
+    cursor: pointer; color: #33445c;
+  }
+  .batsman-picker button.active { background: #1f3864; color: #fff; border-color: #1f3864; }
+  .gridjs-wrapper { border-radius: 10px !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div>
+      <h1>Middlesex CCL Scouting</h1>
+      <div class="meta" id="lastUpdatedLine">—</div>
+    </div>
+    <select id="teamSelect"></select>
+  </header>
+
+  <div class="fixture-banner">
+    <div>
+      <div class="label">Next fixture</div>
+      <div class="value" id="nextFixtureLine">—</div>
+    </div>
+    <div>
+      <div class="label" style="text-align:right">Season record</div>
+      <div class="value" id="seasonRecordLine" style="text-align:right">—</div>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button data-tab="form" class="active">Season Form</button>
+    <button data-tab="batting">Batting Profiles</button>
+    <button data-tab="bowlertype">Dismissals by Bowler Type</button>
+    <button data-tab="bowling">Bowling Threats</button>
+    <button data-tab="reference">Opposition Bowler Reference</button>
+  </nav>
+
+  <section class="panel active" id="panel-form">
+    <div class="card">
+      <h2>2026 League Results</h2>
+      <p class="desc">All completed 1st XI Premier Division matches this season, most recent last. Cup and T20 fixtures excluded; abandoned matches shown but excluded from all averages.</p>
+      <div id="resultsGrid"></div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <h2>Batted First vs Bowled First</h2>
+        <p class="desc">Win rate split by toss outcome this season.</p>
+        <div class="chart-wrap"><canvas id="tossChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Season Snapshot</h2>
+        <div class="stat-row" id="snapshotBoxes"></div>
+        <p class="desc" id="snapshotNote"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-batting">
+    <div class="card">
+      <h2>Batsman Dismissal Profiles</h2>
+      <p class="desc">Dismissal-type split across each player's 2026 innings, plus last 3 scores as a form guide. Click a name below to see their dismissal-type chart.</p>
+      <div id="battingGrid"></div>
+    </div>
+    <div class="card">
+      <h2 id="pickedBatsmanTitle">Dismissal-type breakdown</h2>
+      <div class="batsman-picker" id="batsmanPicker"></div>
+      <div class="chart-wrap" style="height:220px"><canvas id="batsmanChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-bowlertype">
+    <div class="card">
+      <h2>Dismissals by Bowler Type (arm-level)</h2>
+      <p class="desc">"No data" means strictly no public source was found for that bowler. A handful of Pace/Spin figures rest on a lower-confidence identity match rather than a direct source — check the Opposition Bowler Reference tab for the exact confidence rating behind any bowler.</p>
+      <div id="bowlerTypeGrid"></div>
+    </div>
+    <div class="card">
+      <h2>Season Totals</h2>
+      <div class="chart-wrap"><canvas id="armTypeChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-bowling">
+    <div class="card">
+      <h2>Bowling Threats</h2>
+      <p class="desc">Wicket-taking bowlers used this season, by overall impact. Bowling arm/style genuinely isn't in any Play-Cricket scorecard.</p>
+      <div id="bowlingGrid"></div>
+    </div>
+    <div class="card">
+      <h2>Wickets by Bowler</h2>
+      <div class="chart-wrap"><canvas id="wicketsChart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-reference">
+    <div class="card">
+      <h2>Opposition Bowler Reference</h2>
+      <p class="desc">Every bowler who has dismissed this team in 2026, researched individually since none of this is in any scorecard. <span class="badge high">High</span> = an explicit, named source ties this exact player to this exact club. <span class="badge medium">Medium</span> = a strong circumstantial match. <span class="badge low">Low</span> = a plausible name-match, unconfirmed — treat as a lead, not a fact. <span class="badge none">Not found</span> = no public source at all.</p>
+      <div id="referenceGrid"></div>
+    </div>
+  </section>
+
+  <div class="footer-note">
+    Source: each club's official Play-Cricket / Pitchero site, scraped match by match. Bowler arm/type sourced from club sites, press match reports, CricX profiles, and ESPNcricinfo/CricketArchive — never guessed. This dashboard refreshes automatically after each Saturday's fixtures via a scheduled task.
+  </div>
+</div>
+
+<script id="dossier-data" type="application/json">
+{
+  "generatedAt": "2026-07-08",
+  "dataThrough": "2026-07-04",
+  "teams": {
+    "north-middlesex-1st-xi": {
+      "displayName": "North Middlesex CC – 1st XI",
+      "competition": "Middlesex County Cricket League – 1st XI Premier Division",
+      "nextFixture": "Sat 11 Jul 2026 vs Crouch End CC – 1st XI",
+      "results": [
+        {"date":"09 May","opponent":"Crouch End CC","toss":"Lost toss – opp. bat","nmBatted":"2nd","score":"304 vs 379/4","result":"Lost by 75 runs","outcome":"L"},
+        {"date":"16 May","opponent":"Finchley CC","toss":"Won toss – elected bat","nmBatted":"1st","score":"136 vs 140/6","result":"Lost by 4 wkts","outcome":"L"},
+        {"date":"23 May","opponent":"Ealing CC","toss":"Won toss – elected bat","nmBatted":"1st","score":"210/9 vs 211/5","result":"Lost by 5 wkts","outcome":"L"},
+        {"date":"30 May","opponent":"Twickenham CC","toss":"Lost toss – opp. bat","nmBatted":"2nd","score":"146/5 vs 145","result":"Won by 5 wkts","outcome":"W"},
+        {"date":"06 Jun","opponent":"Richmond CC","toss":"—","nmBatted":"—","score":"—","result":"Abandoned","outcome":"A"},
+        {"date":"13 Jun","opponent":"Teddington CC","toss":"Lost toss – opp. bat","nmBatted":"2nd","score":"113 vs 205","result":"Lost by 92 runs","outcome":"L"},
+        {"date":"20 Jun","opponent":"Stanmore CC","toss":"Lost toss – opp. bowl","nmBatted":"1st","score":"210 vs 211/7","result":"Lost by 3 wkts","outcome":"L"},
+        {"date":"27 Jun","opponent":"Shepherds Bush CC","toss":"Lost toss – opp. bat","nmBatted":"2nd","score":"137 vs 252","result":"Lost by 115 runs","outcome":"L"},
+        {"date":"04 Jul","opponent":"Hornsey CC","toss":"Lost toss – opp. bowl","nmBatted":"1st","score":"253/7d vs 194","result":"Won by 59 runs","outcome":"W"}
+      ],
+      "tossSplit": {"battedFirst": {"games":4,"won":1,"lost":3}, "bowledFirst": {"games":4,"won":1,"lost":3}},
+      "battingProfiles": [
+        {"name":"Mohammed Rizvi","innings":8,"caught":57,"bowled":0,"lbw":29,"stumped":0,"runOut":14,"last3":"34, 6, 32*","note":"All-rounder – also 2nd-highest wicket taker","armType":{"raPace":1,"laPace":2,"raSpin":1,"laSpin":0,"spinUnclear":1,"noData":1}},
+        {"name":"David Winn","innings":8,"caught":63,"bowled":25,"lbw":13,"stumped":0,"runOut":0,"last3":"6, 57, 87","note":"In red-hot form – top threat right now","armType":{"raPace":3,"laPace":0,"raSpin":1,"laSpin":1,"spinUnclear":1,"noData":2}},
+        {"name":"Ben Lockrose","innings":8,"caught":50,"bowled":38,"lbw":0,"stumped":13,"runOut":0,"last3":"0, 4, 7","note":"Quiet with bat lately, but leading wicket-taker","armType":{"raPace":0,"laPace":0,"raSpin":1,"laSpin":2,"spinUnclear":1,"noData":4}},
+        {"name":"Evan Flowers","innings":7,"caught":83,"bowled":17,"lbw":0,"stumped":0,"runOut":0,"last3":"32, 3, 9","note":"Very catch-prone – attacking, hits to fielders","armType":{"raPace":2,"laPace":1,"raSpin":1,"laSpin":0,"spinUnclear":0,"noData":2}},
+        {"name":"Divyanshu Bhartiya","innings":7,"caught":86,"bowled":14,"lbw":0,"stumped":0,"runOut":0,"last3":"1, 19, 8","note":"Opener, heavily catch-prone","armType":{"raPace":1,"laPace":0,"raSpin":3,"laSpin":0,"spinUnclear":1,"noData":2}},
+        {"name":"Angus Beattie","innings":7,"caught":71,"bowled":0,"lbw":0,"stumped":14,"runOut":14,"last3":"30, 5, 1","note":"Lower middle order, catch-prone","armType":{"raPace":1,"laPace":1,"raSpin":2,"laSpin":1,"spinUnclear":0,"noData":1}},
+        {"name":"Pradhuman Singh","innings":7,"caught":50,"bowled":33,"lbw":17,"stumped":0,"runOut":0,"last3":"7, 12, 2","note":"Middle order, mixed profile","armType":{"raPace":0,"laPace":0,"raSpin":2,"laSpin":1,"spinUnclear":0,"noData":3}},
+        {"name":"Jacob Miltz","innings":4,"caught":25,"bowled":25,"lbw":0,"stumped":25,"runOut":25,"last3":"16, 26, 100","note":"Rotated in/out, but scored a century last match","armType":{"raPace":1,"laPace":0,"raSpin":0,"laSpin":0,"spinUnclear":0,"noData":2}},
+        {"name":"Will Frais","innings":4,"caught":75,"bowled":0,"lbw":25,"stumped":0,"runOut":0,"last3":"43, 12, 1","note":"Recent top-order addition, catch-prone","armType":{"raPace":1,"laPace":1,"raSpin":1,"laSpin":0,"spinUnclear":0,"noData":1}}
+      ],
+      "bowlingThreats": [
+        {"name":"Ben Lockrose","games":8,"overs":"131.4","wkts":22,"runs":447,"econ":3.40,"avg":20.3,"style":"Unknown – bowls long spells (~16 ov/game), primary strike bowler"},
+        {"name":"Mohammed Rizvi","games":7,"overs":"84.5","wkts":18,"runs":382,"econ":4.50,"avg":21.2,"style":"Unknown – shares new-ball/strike duties, also top-order bat"},
+        {"name":"Alex Smith","games":6,"overs":"43.0","wkts":6,"runs":167,"econ":3.88,"avg":27.8,"style":"Unknown – tidy support seamer"},
+        {"name":"Tom Lawson","games":6,"overs":"40.0","wkts":5,"runs":261,"econ":6.53,"avg":52.2,"style":"Unknown – expensive when used, opens bowling early season"},
+        {"name":"Andrew Jones","games":3,"overs":"22.5","wkts":4,"runs":117,"econ":5.13,"avg":29.3,"style":"Unknown – only used in first 3 games"},
+        {"name":"Max Harris","games":3,"overs":"19.0","wkts":2,"runs":72,"econ":3.79,"avg":36.0,"style":"Unknown – occasional, economical"},
+        {"name":"Keown Taylor Duran","games":2,"overs":"15.0","wkts":2,"runs":72,"econ":4.80,"avg":36.0,"style":"Unknown – occasional"},
+        {"name":"Luke Hollman","games":1,"overs":"6.0","wkts":2,"runs":39,"econ":6.50,"avg":19.5,"style":"Unverified – possible Middlesex/England leg-spinner guest appearance, not confirmed"}
+      ],
+      "bowlerReference": [
+        {"name":"Natim Hassam","club":"Crouch End CC","arm":"Right-arm","type":"Off-spin","confidence":"Medium"},
+        {"name":"Jack Dry","club":"Crouch End CC","arm":"—","type":"Not found","confidence":"none"},
+        {"name":"Adi Hegde","club":"Crouch End CC","arm":"Left-arm","type":"Orthodox spin","confidence":"High"},
+        {"name":"Shaariq Sheikh","club":"Crouch End CC","arm":"Right-arm","type":"Leg-spin","confidence":"High"},
+        {"name":"Sebastian Feszczur-Hatchett","club":"Finchley CC","arm":"—","type":"Not found","confidence":"none"},
+        {"name":"David Burton","club":"Finchley CC","arm":"Right-arm","type":"Pace (fast-medium)","confidence":"High"},
+        {"name":"Ethan D'Souza","club":"Finchley CC","arm":"—","type":"Not found","confidence":"none"},
+        {"name":"Will Hope","club":"Ealing CC","arm":"Right-arm","type":"Medium pace","confidence":"Medium"},
+        {"name":"Alim Dhanani","club":"Ealing CC","arm":"—","type":"Not found","confidence":"none"},
+        {"name":"Mungo Russell","club":"Ealing CC","arm":"Right-arm","type":"Medium-fast pace","confidence":"High"},
+        {"name":"Tom Marshall","club":"Ealing CC","arm":"—","type":"Not found","confidence":"none"},
+        {"name":"Jack Ellis","club":"Ealing CC","arm":"—","type":"Not found","confidence":"none"},
+        {"name":"Ollie White","club":"Twickenham CC","arm":"Unconfirmed","type":"Spin (type unconfirmed)","confidence":"Low"},
+        {"name":"Don Manuwelge","club":"Twickenham CC","arm":"Unconfirmed","type":"Spin (type unconfirmed)","confidence":"Medium"},
+        {"name":"Akash Multani","club":"Twickenham CC","arm":"Unconfirmed","type":"Spin (type unconfirmed)","confidence":"Medium"},
+        {"name":"Jack Grundy","club":"Teddington CC","arm":"Left-arm*","type":"Medium-fast*","confidence":"Low"},
+        {"name":"Alasdair Pollock","club":"Teddington CC","arm":"Right-arm","type":"Medium-fast pace","confidence":"High"},
+        {"name":"Andrew Brewster","club":"Teddington CC","arm":"Right-arm","type":"Medium pace","confidence":"High"},
+        {"name":"Niel Botha","club":"Teddington CC","arm":"Right-arm","type":"Off-break spin","confidence":"High"},
+        {"name":"Hashim Hussain","club":"Stanmore CC","arm":"—","type":"Not found","confidence":"none"},
+        {"name":"Siddharthsinh Parmar","club":"Stanmore CC","arm":"—","type":"Not found","confidence":"none"},
+        {"name":"Steven Reingold","club":"Stanmore CC","arm":"Right-arm","type":"Off-spin","confidence":"High"},
+        {"name":"Idris Otto-Mian","club":"Shepherds Bush CC","arm":"—","type":"Not found","confidence":"none"},
+        {"name":"Chinmay Mullapudi","club":"Shepherds Bush CC","arm":"Left-arm","type":"Medium-fast seam","confidence":"High"},
+        {"name":"Harvey Jupp","club":"Shepherds Bush CC","arm":"Left-arm","type":"Wrist-spin (chinaman)","confidence":"High"},
+        {"name":"Henry Blofield","club":"Shepherds Bush CC","arm":"Right-arm*","type":"Off-break*","confidence":"Low"},
+        {"name":"Caiden Eaton","club":"Hornsey CC","arm":"Left-arm","type":"Fast-medium seam","confidence":"Medium"},
+        {"name":"Patrick Moore","club":"Hornsey CC","arm":"Right-arm","type":"Medium-fast seam","confidence":"High"},
+        {"name":"Jacob Rose","club":"Hornsey CC","arm":"—","type":"Not found","confidence":"none"}
+      ]
+    }
+  }
+}
+</script>
+
+<script>
+const DATA = JSON.parse(document.getElementById('dossier-data').textContent);
+const teamKeys = Object.keys(DATA.teams);
+let currentTeam = teamKeys[0];
+let charts = {};
+let selectedBatsman = null;
+
+const teamSelect = document.getElementById('teamSelect');
+teamKeys.forEach(k => {
+  const opt = document.createElement('option');
+  opt.value = k; opt.textContent = DATA.teams[k].displayName;
+  teamSelect.appendChild(opt);
+});
+teamSelect.value = currentTeam;
+teamSelect.addEventListener('change', () => { currentTeam = teamSelect.value; render(); });
+
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('section.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function confidenceBadge(level) {
+  const cls = { High: 'high', Medium: 'medium', Low: 'low', none: 'none' }[level] || 'none';
+  const label = level === 'none' ? 'Not found' : level;
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function render() {
+  const team = DATA.teams[currentTeam];
+  document.getElementById('lastUpdatedLine').textContent =
+    `Data through ${DATA.dataThrough} · Dashboard last refreshed ${DATA.generatedAt}`;
+  document.getElementById('nextFixtureLine').textContent = team.nextFixture;
+
+  const wins = team.results.filter(r => r.outcome === 'W').length;
+  const losses = team.results.filter(r => r.outcome === 'L').length;
+  const abandoned = team.results.filter(r => r.outcome === 'A').length;
+  document.getElementById('seasonRecordLine').textContent =
+    `${wins}W – ${losses}L${abandoned ? ` (${abandoned} abandoned)` : ''}`;
+
+  // Results grid
+  document.getElementById('resultsGrid').innerHTML = '';
+  new gridjs.Grid({
+    columns: ["Date", "Opponent", "Toss / Elected", "Batted", "Score (Team / Opp)", "Result"],
+    data: team.results.map(r => [r.date, r.opponent, r.toss, r.nmBatted, r.score, r.result]),
+    sort: true, search: true, className: { table: 'plain' },
+  }).render(document.getElementById('resultsGrid'));
+
+  // Toss chart
+  destroyChart('toss');
+  charts.toss = new Chart(document.getElementById('tossChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Batted first', 'Bowled first'],
+      datasets: [
+        { label: 'Won', backgroundColor: '#2e7d4f', data: [team.tossSplit.battedFirst.won, team.tossSplit.bowledFirst.won] },
+        { label: 'Lost', backgroundColor: '#c0392b', data: [team.tossSplit.battedFirst.lost, team.tossSplit.bowledFirst.lost] },
+      ],
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } } } },
+  });
+
+  document.getElementById('snapshotBoxes').innerHTML = `
+    <div class="stat-box"><div class="n">${wins}-${losses}</div><div class="l">2026 league record</div></div>
+    <div class="stat-box"><div class="n">25%</div><div class="l">Win rate, either toss outcome</div></div>
+    <div class="stat-box"><div class="n">${team.bowlingThreats[0].name.split(' ').pop()}</div><div class="l">Leading wicket-taker (${team.bowlingThreats[0].wkts})</div></div>
+  `;
+  document.getElementById('snapshotNote').textContent =
+    'No meaningful toss-based pattern this season – results are driven by individual form more than the toss.';
+
+  // Batting profiles grid
+  document.getElementById('battingGrid').innerHTML = '';
+  new gridjs.Grid({
+    columns: ["Batsman", "Inns", "Caught %", "Bowled %", "LBW %", "Stumped %", "Run Out %", "Last 3", "Note"],
+    data: team.battingProfiles.map(b => [b.name, b.innings, b.caught, b.bowled, b.lbw, b.stumped, b.runOut, b.last3, b.note]),
+    sort: true, search: true, className: { table: 'plain' },
+  }).render(document.getElementById('battingGrid'));
+
+  // Batsman picker + chart
+  const picker = document.getElementById('batsmanPicker');
+  picker.innerHTML = '';
+  selectedBatsman = selectedBatsman && team.battingProfiles.find(b => b.name === selectedBatsman) ? selectedBatsman : team.battingProfiles[0].name;
+  team.battingProfiles.forEach(b => {
+    const btn = document.createElement('button');
+    btn.textContent = b.name;
+    if (b.name === selectedBatsman) btn.classList.add('active');
+    btn.addEventListener('click', () => { selectedBatsman = b.name; render(); });
+    picker.appendChild(btn);
+  });
+  const picked = team.battingProfiles.find(b => b.name === selectedBatsman);
+  document.getElementById('pickedBatsmanTitle').textContent = `Dismissal-type breakdown — ${picked.name}`;
+  destroyChart('batsman');
+  charts.batsman = new Chart(document.getElementById('batsmanChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Caught', 'Bowled', 'LBW', 'Stumped', 'Run Out'],
+      datasets: [{ data: [picked.caught, picked.bowled, picked.lbw, picked.stumped, picked.runOut],
+        backgroundColor: ['#1f3864', '#c0392b', '#e08e0b', '#6c3fa8', '#2e7d4f'] }],
+    },
+    options: { responsive: true, maintainAspectRatio: false },
+  });
+
+  // Bowler-type grid
+  document.getElementById('bowlerTypeGrid').innerHTML = '';
+  new gridjs.Grid({
+    columns: ["Batsman", "RA Pace", "LA Pace", "RA Spin", "LA Spin", "Spin, arm unclear", "No data"],
+    data: team.battingProfiles.map(b => [b.name, b.armType.raPace, b.armType.laPace, b.armType.raSpin, b.armType.laSpin, b.armType.spinUnclear, b.armType.noData]),
+    sort: true, className: { table: 'plain' },
+  }).render(document.getElementById('bowlerTypeGrid'));
+
+  const totals = { raPace: 0, laPace: 0, raSpin: 0, laSpin: 0, spinUnclear: 0, noData: 0 };
+  team.battingProfiles.forEach(b => Object.keys(totals).forEach(k => totals[k] += b.armType[k]));
+  destroyChart('armType');
+  charts.armType = new Chart(document.getElementById('armTypeChart'), {
+    type: 'bar',
+    data: {
+      labels: ['RA Pace', 'LA Pace', 'RA Spin', 'LA Spin', 'Spin, arm unclear', 'No data'],
+      datasets: [{ label: 'Dismissals (season total)', backgroundColor: ['#1f3864','#3f5b8c','#c0392b','#e08e0b','#b98a3a','#9aa5b1'],
+        data: [totals.raPace, totals.laPace, totals.raSpin, totals.laSpin, totals.spinUnclear, totals.noData] }],
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 2 } } } },
+  });
+
+  // Bowling threats grid
+  document.getElementById('bowlingGrid').innerHTML = '';
+  new gridjs.Grid({
+    columns: ["Bowler", "Games", "Overs", "Wkts", "Runs", "Econ", "Avg", "Style"],
+    data: team.bowlingThreats.map(x => [x.name, x.games, x.overs, x.wkts, x.runs, x.econ, x.avg, x.style]),
+    sort: true, search: true, className: { table: 'plain' },
+  }).render(document.getElementById('bowlingGrid'));
+
+  destroyChart('wickets');
+  charts.wickets = new Chart(document.getElementById('wicketsChart'), {
+    type: 'bar',
+    data: {
+      labels: team.bowlingThreats.map(x => x.name),
+      datasets: [{ label: 'Wickets', backgroundColor: '#1f3864', data: team.bowlingThreats.map(x => x.wkts) }],
+    },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { stepSize: 2 } } } },
+  });
+
+  // Reference grid
+  document.getElementById('referenceGrid').innerHTML = '';
+  new gridjs.Grid({
+    columns: [
+      "Bowler", "Club", "Arm", "Type",
+      { name: "Confidence", formatter: (cell) => gridjs.html(confidenceBadge(cell)) },
+    ],
+    data: team.bowlerReference.map(x => [x.name, x.club, x.arm, x.type, x.confidence]),
+    sort: true, search: true, className: { table: 'plain' },
+  }).render(document.getElementById('referenceGrid'));
+}
+
+render();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
