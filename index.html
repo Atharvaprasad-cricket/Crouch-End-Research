@@ -6066,7 +6066,21 @@ const DATA = JSON.parse(document.getElementById('dossier-data').textContent);
 const teamKeys = Object.keys(DATA.teams);
 let currentTeam = teamKeys[0];
 let charts = {};
+let grids = {};
 let selectedBatsman = null;
+
+// Grid.js mounts via Preact and doesn't pick up manual innerHTML clears, so a
+// fresh `new gridjs.Grid(...).render()` on every render() call leaves the
+// table showing whichever team was mounted first. Reuse the instance and use
+// the documented update path: updateConfig(config).forceRender().
+function renderGrid(id, config) {
+  if (grids[id]) {
+    grids[id].updateConfig(config).forceRender();
+  } else {
+    document.getElementById(id).innerHTML = '';
+    grids[id] = new gridjs.Grid(config).render(document.getElementById(id));
+  }
+}
 
 const teamSelect = document.getElementById('teamSelect');
 teamKeys.forEach(k => {
@@ -6108,12 +6122,11 @@ function render() {
     `${wins}W – ${losses}L${draws ? ` – ${draws}D` : ''}${abandoned ? ` (${abandoned} abandoned)` : ''}`;
 
   // Results grid
-  document.getElementById('resultsGrid').innerHTML = '';
-  new gridjs.Grid({
+  renderGrid('resultsGrid', {
     columns: ["Date", "Opponent", "Toss / Elected", "Batted", "Score (Team / Opp)", "Result"],
     data: team.results.map(r => [r.date, r.opponent, r.toss, r.nmBatted, r.score, r.result]),
     sort: true, search: true, className: { table: 'plain' },
-  }).render(document.getElementById('resultsGrid'));
+  });
 
   // Toss chart
   destroyChart('toss');
@@ -6147,12 +6160,11 @@ function render() {
     `Batting first: ${bf.won}/${bf.games} won (${bfPct}%). Bowling first: ${bw.won}/${bw.games} won (${bwPct}%). This season shows ${tossLead}.`;
 
   // Batting profiles grid
-  document.getElementById('battingGrid').innerHTML = '';
-  new gridjs.Grid({
+  renderGrid('battingGrid', {
     columns: ["Batsman", "Inns", "Caught %", "Bowled %", "LBW %", "Stumped %", "Run Out %", "Last 3", "Note"],
     data: team.battingProfiles.map(b => [b.name, b.innings, b.caught, b.bowled, b.lbw, b.stumped, b.runOut, b.last3, b.note]),
     sort: true, search: true, className: { table: 'plain' },
-  }).render(document.getElementById('battingGrid'));
+  });
 
   // Batsman picker + chart
   const picker = document.getElementById('batsmanPicker');
@@ -6179,12 +6191,11 @@ function render() {
   });
 
   // Bowler-type grid
-  document.getElementById('bowlerTypeGrid').innerHTML = '';
-  new gridjs.Grid({
+  renderGrid('bowlerTypeGrid', {
     columns: ["Batsman", "RA Pace", "LA Pace", "RA Spin", "LA Spin", "Spin, arm unclear", "No data"],
     data: team.battingProfiles.map(b => [b.name, b.armType.raPace, b.armType.laPace, b.armType.raSpin, b.armType.laSpin, b.armType.spinUnclear, b.armType.noData]),
     sort: true, className: { table: 'plain' },
-  }).render(document.getElementById('bowlerTypeGrid'));
+  });
 
   const totals = { raPace: 0, laPace: 0, raSpin: 0, laSpin: 0, spinUnclear: 0, noData: 0 };
   team.battingProfiles.forEach(b => Object.keys(totals).forEach(k => totals[k] += b.armType[k]));
@@ -6200,12 +6211,11 @@ function render() {
   });
 
   // Bowling threats grid
-  document.getElementById('bowlingGrid').innerHTML = '';
-  new gridjs.Grid({
+  renderGrid('bowlingGrid', {
     columns: ["Bowler", "Games", "Overs", "Wkts", "Runs", "Econ", "Avg", "Style"],
     data: team.bowlingThreats.map(x => [x.name, x.games, x.overs, x.wkts, x.runs, x.econ, x.avg, x.style]),
     sort: true, search: true, className: { table: 'plain' },
-  }).render(document.getElementById('bowlingGrid'));
+  });
 
   destroyChart('wickets');
   charts.wickets = new Chart(document.getElementById('wicketsChart'), {
@@ -6218,15 +6228,14 @@ function render() {
   });
 
   // Reference grid
-  document.getElementById('referenceGrid').innerHTML = '';
-  new gridjs.Grid({
+  renderGrid('referenceGrid', {
     columns: [
       "Bowler", "Club", "Arm", "Type",
       { name: "Confidence", formatter: (cell) => gridjs.html(confidenceBadge(cell)) },
     ],
     data: team.bowlerReference.map(x => [x.name, x.club, x.arm, x.type, x.confidence]),
     sort: true, search: true, className: { table: 'plain' },
-  }).render(document.getElementById('referenceGrid'));
+  });
 }
 
 render();
