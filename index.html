@@ -160,7 +160,8 @@
   </section>
 
   <div class="footer-note">
-    Source: each club's official Play-Cricket / Pitchero site, scraped match by match. Bowler arm/type sourced from club sites, press match reports, CricX profiles, and ESPNcricinfo/CricketArchive — never guessed. This dashboard refreshes automatically after each Saturday's fixtures via a scheduled task.
+    Source: each club's official Play-Cricket / Pitchero site, scraped match by match. Bowler arm/type sourced from club sites, press match reports, CricX profiles, and ESPNcricinfo/CricketArchive — never guessed. This dashboard refreshes automatically after each Saturday's fixtures via a scheduled task.<br>
+    Known gap: Teddington, Stanmore, and Shepherds Bush all run on JS-only match-centre platforms that can't be scraped directly. Matches these three clubs played against each other (Teddington–Stanmore, Teddington–Shepherds Bush, Stanmore–Shepherds Bush) have no reliable source from either side and are omitted rather than shown with unverified scores — so these three teams currently show 7 of their 9 completed league games. All matches against the other 7 clubs are sourced from a directly-fetched scorecard.
   </div>
 </div>
 
@@ -734,15 +735,6 @@
       "nextFixture": "Sat 18 July 2026: Teddington CC - 1st XI vs Twickenham CC - 1st XI (Middlesex County Cricket League - 1st XI Premier Division), home",
       "results": [
         {
-          "date": "2026-05-09",
-          "opponent": "Shepherds Bush CC",
-          "toss": "Unknown (scorecard unavailable)",
-          "nmBatted": "2nd",
-          "score": "Teddington chased vs Shepherds Bush 200 (Abdullah Nazir 5/55)",
-          "result": "Teddington won, chasing 200 — fifties from Joe Ludlow and Harry Evans in a 100-run stand; full chase total/margin not confirmable from public sources (sourced via Shepherds Bush's own match record, not a direct Teddington scorecard)",
-          "outcome": "W"
-        },
-        {
           "date": "2026-05-16",
           "opponent": "Twickenham CC",
           "toss": "Teddington won toss, elected to bat",
@@ -797,15 +789,6 @@
           "outcome": "D"
         },
         {
-          "date": "2026-06-27",
-          "opponent": "Stanmore CC, Middlesex",
-          "toss": "Unknown (scorecard unavailable)",
-          "nmBatted": "1st",
-          "score": "151 vs 152/6",
-          "result": "Stanmore won by 4 wickets (sourced via Stanmore's own match record, not a direct Teddington scorecard)",
-          "outcome": "L"
-        },
-        {
           "date": "2026-07-04",
           "opponent": "Ealing CC",
           "toss": "Ealing won toss, elected to bat",
@@ -817,13 +800,13 @@
       ],
       "tossSplit": {
         "battedFirst": {
-          "games": 5,
+          "games": 4,
           "won": 3,
-          "lost": 1
+          "lost": 0
         },
         "bowledFirst": {
-          "games": 3,
-          "won": 3,
+          "games": 2,
+          "won": 2,
           "lost": 0
         }
       },
@@ -4362,35 +4345,17 @@
           "score": "211/7 vs 210",
           "result": "Won by 3 wickets",
           "outcome": "W"
-        },
-        {
-          "date": "2026-06-27",
-          "opponent": "Teddington CC",
-          "toss": "Unknown (scorecard unavailable)",
-          "nmBatted": "2nd",
-          "score": "152/6 vs 151",
-          "result": "Won by 4 wickets",
-          "outcome": "W"
-        },
-        {
-          "date": "2026-07-04",
-          "opponent": "Shepherds Bush CC",
-          "toss": "Unknown (scorecard unavailable)",
-          "nmBatted": "1st",
-          "score": "253/9 vs 179/9",
-          "result": "Won by 74 runs",
-          "outcome": "W"
         }
       ],
       "tossSplit": {
         "battedFirst": {
-          "games": 3,
-          "won": 2,
+          "games": 2,
+          "won": 1,
           "lost": 1
         },
         "bowledFirst": {
-          "games": 6,
-          "won": 2,
+          "games": 5,
+          "won": 1,
           "lost": 3
         }
       },
@@ -4879,15 +4844,6 @@
       "nextFixture": "Sat 1 Aug 2026, 11:00 – Finchley CC 1st XI vs Shepherds Bush CC 1st XI, Middlesex County Cricket League 1st XI Premier Division",
       "results": [
         {
-          "date": "2026-05-09",
-          "opponent": "Teddington CC",
-          "toss": "Unknown",
-          "nmBatted": "1st",
-          "score": "200 vs unknown",
-          "result": "Low-confidence: SB all out for 200 (Abdullah Nazir 5/55); Teddington reply included fifties in a 100-run stand — full chase total/margin not confirmable from public sources",
-          "outcome": "L"
-        },
-        {
           "date": "2026-05-16",
           "opponent": "Hornsey CC",
           "toss": "Hornsey won toss, chose to bowl",
@@ -4949,21 +4905,12 @@
           "score": "252 vs 137",
           "result": "Won by 115 runs",
           "outcome": "W"
-        },
-        {
-          "date": "2026-07-04",
-          "opponent": "Stanmore CC, Middlesex",
-          "toss": "Unknown",
-          "nmBatted": "1st",
-          "score": "241/8 vs 195",
-          "result": "Won by 46 runs (sourced from match-report snippets, not a fetched scorecard)",
-          "outcome": "W"
         }
       ],
       "tossSplit": {
         "battedFirst": {
-          "games": 3,
-          "won": 2,
+          "games": 2,
+          "won": 1,
           "lost": 1
         },
         "bowledFirst": {
