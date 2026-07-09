@@ -63,9 +63,26 @@
   }
   .batsman-picker button.active { background: #1f3864; color: #fff; border-color: #1f3864; }
   .gridjs-wrapper { border-radius: 10px !important; }
+  .wip-ribbon {
+    position: fixed; inset: 0; pointer-events: none; z-index: 400; overflow: hidden; display: none;
+  }
+  .wip-ribbon.show { display: block; }
+  .wip-ribbon-inner {
+    position: absolute; top: 50%; left: 50%; width: 220vmax;
+    transform: translate(-50%, -50%) rotate(45deg);
+    background: rgba(192, 57, 43, 0.16);
+    border-top: 1px solid rgba(192, 57, 43, 0.45);
+    border-bottom: 1px solid rgba(192, 57, 43, 0.45);
+    color: rgba(160, 30, 25, 0.75);
+    font-weight: 800; font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase;
+    text-align: center; white-space: nowrap; padding: 6px 0;
+  }
 </style>
 </head>
 <body>
+<div id="wipRibbon" class="wip-ribbon" aria-hidden="true">
+  <div class="wip-ribbon-inner">WIP — data being verified &nbsp;·&nbsp; WIP — data being verified &nbsp;·&nbsp; WIP — data being verified &nbsp;·&nbsp; WIP — data being verified &nbsp;·&nbsp; WIP — data being verified &nbsp;·&nbsp; WIP — data being verified</div>
+</div>
 <div id="app">
   <header class="top">
     <div>
@@ -6078,6 +6095,7 @@ function render() {
   document.getElementById('lastUpdatedLine').textContent =
     `Data through ${DATA.dataThrough} · Dashboard last refreshed ${DATA.generatedAt}`;
   document.getElementById('nextFixtureLine').textContent = team.nextFixture;
+  document.getElementById('wipRibbon').classList.toggle('show', currentTeam !== 'north-middlesex-1st-xi');
 
   const wins = team.results.filter(r => r.outcome === 'W').length;
   const losses = team.results.filter(r => r.outcome === 'L').length;
