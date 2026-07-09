@@ -470,7 +470,7 @@ function render() {
   renderPlayersInFocus(team);
 }
 
-function youTubeEmbedUrl(raw) {
+function parseYouTubeClip(raw) {
   try {
     const u = new URL(raw);
     let id = null;
@@ -486,11 +486,7 @@ function youTubeEmbedUrl(raw) {
     const start = t ? parseInt(t, 10) : null;
     const e = u.searchParams.get('end');
     const end = e ? parseInt(e, 10) : null;
-    const params = [];
-    if (start !== null) params.push(`start=${start}`);
-    if (end !== null) params.push(`end=${end}`);
-    params.push('rel=0', 'enablejsapi=1', 'playsinline=1');
-    return { url: `https://www.youtube-nocookie.com/embed/${id}?${params.join('&')}`, start, end };
+    return { id, start, end };
   } catch (e) { return null; }
 }
 
@@ -499,48 +495,92 @@ function listOrEmpty(arr) {
   return arr.map(x => `<li>${x}</li>`).join('');
 }
 
-// Enforces the trimmed start/end window on YouTube clip embeds.
-// The `end` URL param alone is unreliable across browsers, so once the
-// player reports it has started playing, we schedule a postMessage
-// pauseVideo call at (end - start) seconds as a hard backstop.
-const clipPlayers = {};
+// --- Clip trimming ---
+// The `end` param on a plain iframe src is unreliable across browsers, so the
+// primary path loads YouTube's real IFrame Player API and uses a watchdog
+// interval (getCurrentTime() vs end) to force pauseVideo() at the right moment.
+// If that script can't load (e.g. blocked by a sandboxed CSP), each clip falls
+// back to a plain iframe using start/end URL params — it will at least open at
+// the right point even if it can't hard-stop.
+const ytPlayers = {};
+const pendingClipInit = [];
+let youTubeApiLoadStarted = false;
 
-function setupClipAutoStop(iframeId, start, end) {
-  clipPlayers[iframeId] = { start, end, timer: null };
-  const iframe = document.getElementById(iframeId);
-  if (!iframe) return;
-  iframe.addEventListener('load', () => {
-    try {
-      iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: iframeId }), '*');
-      iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }), '*');
-    } catch (e) {}
-  });
+function loadYouTubeIframeApi() {
+  if (youTubeApiLoadStarted) return;
+  youTubeApiLoadStarted = true;
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  tag.async = true;
+  document.head.appendChild(tag);
 }
 
-window.addEventListener('message', (e) => {
-  let data;
-  try { data = JSON.parse(e.data); } catch (err) { return; }
-  if (!data || !data.event) return;
-  for (const id in clipPlayers) {
-    const iframe = document.getElementById(id);
-    if (!iframe || iframe.contentWindow !== e.source) continue;
-    const cfg = clipPlayers[id];
-    if (data.event === 'onStateChange') {
-      if (data.info === 1) {
-        if (cfg.timer) clearTimeout(cfg.timer);
-        const durationMs = Math.max(0, (cfg.end - cfg.start)) * 1000;
-        cfg.timer = setTimeout(() => {
-          try {
-            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
-          } catch (err) {}
-        }, durationMs);
-      } else if (cfg.timer) {
-        clearTimeout(cfg.timer);
-        cfg.timer = null;
-      }
-    }
+window.onYouTubeIframeAPIReady = function () {
+  pendingClipInit.splice(0).forEach(initClipPlayer);
+};
+
+function initClipPlayer(cfg) {
+  if (!document.getElementById(cfg.containerId)) return; // panel re-rendered before API finished loading
+  const player = new YT.Player(cfg.containerId, {
+    videoId: cfg.videoId,
+    playerVars: {
+      start: cfg.start !== null ? cfg.start : undefined,
+      end: cfg.end !== null ? cfg.end : undefined,
+      rel: 0,
+      playsinline: 1,
+    },
+    events: {
+      onStateChange: (e) => {
+        const entry = ytPlayers[cfg.containerId];
+        if (!entry) return;
+        if (e.data === YT.PlayerState.PLAYING && cfg.end !== null) {
+          if (entry.watchdog) clearInterval(entry.watchdog);
+          entry.watchdog = setInterval(() => {
+            if (player.getCurrentTime() >= cfg.end - 0.15) {
+              player.pauseVideo();
+              clearInterval(entry.watchdog);
+              entry.watchdog = null;
+            }
+          }, 200);
+        } else if (entry.watchdog) {
+          clearInterval(entry.watchdog);
+          entry.watchdog = null;
+        }
+      },
+    },
+  });
+  ytPlayers[cfg.containerId] = { player, watchdog: null };
+}
+
+function setupClipPlayer(containerId, videoId, start, end) {
+  loadYouTubeIframeApi();
+  const cfg = { containerId, videoId, start, end };
+  if (window.YT && window.YT.Player) {
+    initClipPlayer(cfg);
+  } else {
+    pendingClipInit.push(cfg);
   }
-});
+  // Fallback: if the official API hasn't loaded in time (e.g. CDN blocked by a
+  // sandboxed CSP), swap the placeholder for a plain trimmed-URL iframe.
+  setTimeout(() => {
+    if (window.YT && window.YT.Player) return;
+    const el = document.getElementById(containerId);
+    if (!el || el.tagName === 'IFRAME') return;
+    const params = [];
+    if (start !== null) params.push(`start=${start}`);
+    if (end !== null) params.push(`end=${end}`);
+    params.push('rel=0', 'playsinline=1');
+    const iframe = document.createElement('iframe');
+    iframe.id = containerId;
+    iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?${params.join('&')}`;
+    iframe.title = 'Clip';
+    iframe.setAttribute('allow', 'autoplay; encrypted-media');
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute('loading', 'lazy');
+    iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    el.replaceWith(iframe);
+  }, 4000);
+}
 
 function renderPlayersInFocus(team) {
   const players = team.battingProfiles.map(b => b.name);
@@ -577,23 +617,23 @@ function renderPlayersInFocus(team) {
   const clipMeta = [];
   document.getElementById('focusVideoList').innerHTML = clips.length
     ? clips.map((c, idx) => {
-        const embed = c.url ? youTubeEmbedUrl(c.url) : null;
-        const iframeId = embed ? `ytclip-${idx}-${Math.random().toString(36).slice(2, 8)}` : null;
-        if (embed && embed.start !== null && embed.end !== null) {
-          clipMeta.push({ id: iframeId, start: embed.start, end: embed.end });
+        const clip = c.url ? parseYouTubeClip(c.url) : null;
+        const containerId = clip ? `ytclip-${idx}-${Math.random().toString(36).slice(2, 8)}` : null;
+        if (clip && containerId) {
+          clipMeta.push({ containerId, videoId: clip.id, start: clip.start, end: clip.end });
         }
         const tags = (c.tags || []).map(t => `<span class="tag-${t}">${tagLabel[t] || t}</span>`).join('');
         return `
         <div class="focus-video">
           <div class="focus-video-title">${c.title || 'Clip'}</div>
-          ${embed ? `<div class="focus-video-embed"><iframe id="${iframeId}" src="${embed.url}" title="${c.title || 'Clip'}" allow="autoplay; encrypted-media" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>` : ''}
+          ${containerId ? `<div class="focus-video-embed"><div id="${containerId}"></div></div>` : ''}
           ${c.url ? `<a href="${c.url}" target="_blank" rel="noopener">${c.url}</a>` : ''}
           ${tags ? `<div class="focus-video-tags">${tags}</div>` : ''}
           ${c.caption ? `<p>${c.caption}</p>` : ''}
         </div>`;
       }).join('')
     : '<p class="focus-empty" style="padding:8px 0;text-align:left">No video clips added yet.</p>';
-  clipMeta.forEach(m => setupClipAutoStop(m.id, m.start, m.end));
+  clipMeta.forEach(m => setupClipPlayer(m.containerId, m.videoId, m.start, m.end));
 
   document.getElementById('focusStrong').innerHTML = listOrEmpty(focusData.strongAreas);
   document.getElementById('focusWeak').innerHTML = listOrEmpty(focusData.weakAreas);
