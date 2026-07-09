@@ -82,6 +82,31 @@
   }
   .batsman-picker button.active { background: var(--ce-gold); color: var(--ce-navy-deep); border-color: var(--ce-gold); }
   .gridjs-wrapper { border-radius: 10px !important; }
+  nav.primarytabs {
+    display: inline-flex; background: var(--ce-navy-deep); border-radius: 10px; padding: 4px; margin-bottom: 18px; gap: 4px;
+    border-bottom: none;
+  }
+  nav.primarytabs button {
+    appearance: none; border: none; background: none; color: rgba(255,255,255,0.68); font-weight: 700; font-size: 14px;
+    padding: 9px 20px; border-radius: 7px; cursor: pointer;
+  }
+  nav.primarytabs button.active { background: var(--ce-gold); color: var(--ce-navy-deep); }
+  .primary-panel { display: none; }
+  .primary-panel.active { display: block; }
+  nav.subtabs { margin-top: 2px; }
+  .focus-empty { color: #5a6a7e; font-size: 13px; padding: 20px 0; text-align: center; }
+  .focus-section { margin-top: 18px; }
+  .focus-section h3, .focus-section-grid h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ce-navy-mid); margin: 0 0 8px; }
+  .focus-section-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 18px; }
+  @media (max-width: 800px) { .focus-section-grid { grid-template-columns: 1fr; } }
+  .focus-section-grid ul, .focus-video-list { list-style: none; margin: 0; padding: 0; }
+  .focus-section-grid li { font-size: 13px; padding: 6px 10px; background: var(--ce-bg); border-radius: 8px; margin-bottom: 6px; border-left: 3px solid var(--ce-gold); }
+  .focus-section-grid li.focus-none { border-left-color: #c7d0da; color: #8390a1; font-style: italic; }
+  .focus-video { background: var(--ce-bg); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; border-left: 3px solid var(--ce-navy); }
+  .focus-video-title { font-weight: 700; color: var(--ce-navy-deep); font-size: 13px; margin-bottom: 4px; }
+  .focus-video a { color: var(--ce-navy-mid); font-size: 12px; word-break: break-all; }
+  .focus-video p { font-size: 13px; margin: 6px 0 0; color: #33445c; }
+  .focus-notes { font-size: 13px; color: #33445c; line-height: 1.6; margin: 0; }
   .wip-ribbon {
     position: fixed; inset: 0; pointer-events: none; z-index: 400; overflow: hidden; display: none;
   }
@@ -122,7 +147,13 @@
     </div>
   </div>
 
-  <nav class="tabs">
+  <nav class="tabs primarytabs">
+    <button data-primary="aggregate" class="active">Aggregate Data</button>
+    <button data-primary="focus">Players in Focus</button>
+  </nav>
+
+  <div class="primary-panel active" id="primary-aggregate">
+  <nav class="tabs subtabs">
     <button data-tab="form" class="active">Season Form</button>
     <button data-tab="batting">Batting Profiles</button>
     <button data-tab="bowlertype">Dismissals by Bowler Type</button>
@@ -194,6 +225,43 @@
       <div id="referenceGrid"></div>
     </div>
   </section>
+  </div>
+
+  <div class="primary-panel" id="primary-focus">
+    <div class="card">
+      <h2>Players in Focus</h2>
+      <p class="desc">Click a batter to review video clips and annotated analysis for them — strong scoring areas, weak scoring areas, technical flaws. Nothing has been added for this team yet; this is the space it'll live in once clips are added.</p>
+      <div class="batsman-picker" id="focusPicker"></div>
+    </div>
+    <div class="card">
+      <h2 id="focusPlayerTitle">Select a player</h2>
+      <div class="focus-empty" id="focusEmptyState">Pick a batter above to see their video clips and analysis.</div>
+      <div id="focusContent" style="display:none">
+        <div class="focus-section">
+          <h3>Video Clips</h3>
+          <div id="focusVideoList" class="focus-video-list"></div>
+        </div>
+        <div class="focus-section-grid">
+          <div>
+            <h3>Strong Scoring Areas</h3>
+            <ul id="focusStrong"></ul>
+          </div>
+          <div>
+            <h3>Weak Scoring Areas</h3>
+            <ul id="focusWeak"></ul>
+          </div>
+          <div>
+            <h3>Technical Flaws</h3>
+            <ul id="focusFlaws"></ul>
+          </div>
+        </div>
+        <div class="focus-section">
+          <h3>General Notes</h3>
+          <p class="focus-notes" id="focusNotes"></p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="footer-note">
     Source: each club's official Play-Cricket / Pitchero site, scraped match by match. Bowler arm/type sourced from club sites, press match reports, CricX profiles, and ESPNcricinfo/CricketArchive — never guessed. This dashboard refreshes automatically after each Saturday's fixtures via a scheduled task.<br>
@@ -764,7 +832,8 @@
           "type": "Not found",
           "confidence": "none"
         }
-      ]
+      ],
+      "playersInFocus": {}
     },
     "teddington-1st-xi": {
       "displayName": "Teddington CC – 1st XI",
@@ -1262,7 +1331,8 @@
           "confidence": "none"
         }
       ],
-      "competition": "Middlesex County Cricket League – 1st XI Premier Division"
+      "competition": "Middlesex County Cricket League – 1st XI Premier Division",
+      "playersInFocus": {}
     },
     "crouch-end-1st-xi": {
       "displayName": "Crouch End CC – 1st XI",
@@ -1827,7 +1897,8 @@
           "confidence": "none"
         }
       ],
-      "competition": "Middlesex County Cricket League – 1st XI Premier Division"
+      "competition": "Middlesex County Cricket League – 1st XI Premier Division",
+      "playersInFocus": {}
     },
     "hornsey-1st-xi": {
       "displayName": "Hornsey CC – 1st XI",
@@ -2391,7 +2462,8 @@
           "confidence": "none"
         }
       ],
-      "competition": "Middlesex County Cricket League – 1st XI Premier Division"
+      "competition": "Middlesex County Cricket League – 1st XI Premier Division",
+      "playersInFocus": {}
     },
     "richmond-1st-xi": {
       "displayName": "Richmond CC, Middx – 1st XI",
@@ -2980,7 +3052,8 @@
           "confidence": "High"
         }
       ],
-      "competition": "Middlesex County Cricket League – 1st XI Premier Division"
+      "competition": "Middlesex County Cricket League – 1st XI Premier Division",
+      "playersInFocus": {}
     },
     "finchley-1st-xi": {
       "displayName": "Finchley CC – 1st XI",
@@ -3587,7 +3660,8 @@
           "confidence": "none"
         }
       ],
-      "competition": "Middlesex County Cricket League – 1st XI Premier Division"
+      "competition": "Middlesex County Cricket League – 1st XI Premier Division",
+      "playersInFocus": {}
     },
     "ealing-1st-xi": {
       "displayName": "Ealing CC – 1st XI",
@@ -4313,7 +4387,8 @@
           "confidence": "none"
         }
       ],
-      "competition": "Middlesex County Cricket League – 1st XI Premier Division"
+      "competition": "Middlesex County Cricket League – 1st XI Premier Division",
+      "playersInFocus": {}
     },
     "stanmore-1st-xi": {
       "displayName": "Stanmore CC, Middlesex – 1st XI",
@@ -4873,7 +4948,8 @@
           "confidence": "High"
         }
       ],
-      "competition": "Middlesex County Cricket League – 1st XI Premier Division"
+      "competition": "Middlesex County Cricket League – 1st XI Premier Division",
+      "playersInFocus": {}
     },
     "shepherds-bush-1st-xi": {
       "displayName": "Shepherds Bush CC – 1st XI",
@@ -5386,7 +5462,8 @@
           "confidence": "none"
         }
       ],
-      "competition": "Middlesex County Cricket League – 1st XI Premier Division"
+      "competition": "Middlesex County Cricket League – 1st XI Premier Division",
+      "playersInFocus": {}
     },
     "twickenham-1st-xi": {
       "displayName": "Twickenham CC – 1st XI",
@@ -6056,7 +6133,8 @@
           "confidence": "Medium"
         }
       ],
-      "competition": "Middlesex County Cricket League – 1st XI Premier Division"
+      "competition": "Middlesex County Cricket League – 1st XI Premier Division",
+      "playersInFocus": {}
     }
   }
 }
@@ -6069,6 +6147,7 @@ let currentTeam = teamKeys[0];
 let charts = {};
 let grids = {};
 let selectedBatsman = null;
+let selectedFocusPlayer = null;
 
 // Grid.js mounts via Preact and doesn't pick up manual innerHTML clears, so a
 // fresh `new gridjs.Grid(...).render()` on every render() call leaves the
@@ -6092,12 +6171,21 @@ teamKeys.forEach(k => {
 teamSelect.value = currentTeam;
 teamSelect.addEventListener('change', () => { currentTeam = teamSelect.value; render(); });
 
-document.querySelectorAll('nav.tabs button').forEach(btn => {
+document.querySelectorAll('nav.subtabs button').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('nav.subtabs button').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('section.panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+document.querySelectorAll('nav.primarytabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.primarytabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.primary-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('primary-' + btn.dataset.primary).classList.add('active');
   });
 });
 
@@ -6238,6 +6326,59 @@ function render() {
     data: team.bowlerReference.map(x => [x.name, x.club, x.arm, x.type, x.confidence]),
     sort: true, search: true, className: { table: 'plain' },
   });
+
+  renderPlayersInFocus(team);
+}
+
+function listOrEmpty(arr) {
+  if (!arr || !arr.length) return '<li class="focus-none">None added yet</li>';
+  return arr.map(x => `<li>${x}</li>`).join('');
+}
+
+function renderPlayersInFocus(team) {
+  const players = team.battingProfiles.map(b => b.name);
+  const picker = document.getElementById('focusPicker');
+  picker.innerHTML = '';
+  if (!selectedFocusPlayer || !players.includes(selectedFocusPlayer)) selectedFocusPlayer = null;
+  players.forEach(name => {
+    const btn = document.createElement('button');
+    btn.textContent = name;
+    if (name === selectedFocusPlayer) btn.classList.add('active');
+    btn.addEventListener('click', () => { selectedFocusPlayer = name; renderPlayersInFocus(DATA.teams[currentTeam]); });
+    picker.appendChild(btn);
+  });
+
+  const emptyState = document.getElementById('focusEmptyState');
+  const content = document.getElementById('focusContent');
+  const title = document.getElementById('focusPlayerTitle');
+
+  if (!selectedFocusPlayer) {
+    title.textContent = 'Select a player';
+    emptyState.style.display = 'block';
+    content.style.display = 'none';
+    return;
+  }
+
+  title.textContent = selectedFocusPlayer;
+  emptyState.style.display = 'none';
+  content.style.display = 'block';
+
+  const focusData = (team.playersInFocus && team.playersInFocus[selectedFocusPlayer]) || {};
+  const clips = focusData.videoClips || [];
+
+  document.getElementById('focusVideoList').innerHTML = clips.length
+    ? clips.map(c => `
+        <div class="focus-video">
+          <div class="focus-video-title">${c.title || 'Clip'}</div>
+          ${c.url ? `<a href="${c.url}" target="_blank" rel="noopener">${c.url}</a>` : ''}
+          ${c.caption ? `<p>${c.caption}</p>` : ''}
+        </div>`).join('')
+    : '<p class="focus-empty" style="padding:8px 0;text-align:left">No video clips added yet.</p>';
+
+  document.getElementById('focusStrong').innerHTML = listOrEmpty(focusData.strongAreas);
+  document.getElementById('focusWeak').innerHTML = listOrEmpty(focusData.weakAreas);
+  document.getElementById('focusFlaws').innerHTML = listOrEmpty(focusData.technicalFlaws);
+  document.getElementById('focusNotes').textContent = focusData.notes || 'No notes added yet.';
 }
 
 render();
