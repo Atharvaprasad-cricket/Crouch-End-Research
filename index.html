@@ -4,64 +4,83 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Matchday Research</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0d1b3a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Matchday">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="./icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
 <style>
-  :root { color-scheme: light; }
+  :root {
+    color-scheme: light;
+    --ce-navy-deep: #0d1b3a;
+    --ce-navy: #16264a;
+    --ce-navy-mid: #223b6e;
+    --ce-navy-light: #47649a;
+    --ce-gold: #e2a53d;
+    --ce-gold-dark: #9c6c11;
+    --ce-gold-pale: #fbeed9;
+    --ce-bg: #f2f4f9;
+  }
   * { box-sizing: border-box; }
   body {
-    margin: 0; padding: 0; background: #f4f6f8; color: #1a2332;
+    margin: 0; padding: 0; background: var(--ce-bg); color: #1a2332;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   #app { max-width: 1180px; margin: 0 auto; padding: 20px 20px 60px; }
-  header.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-  header.top h1 { font-size: 22px; margin: 0 0 4px; color: #10233f; }
+  header.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 3px solid var(--ce-gold); }
+  header.top h1 { font-size: 22px; margin: 0 0 4px; color: var(--ce-navy-deep); }
   header.top .meta { font-size: 13px; color: #5a6a7e; }
   select#teamSelect {
-    padding: 8px 12px; font-size: 14px; border-radius: 8px; border: 1px solid #c7d0da;
-    background: #fff; color: #1a2332;
+    padding: 8px 12px; font-size: 14px; border-radius: 8px; border: 1px solid var(--ce-navy-light);
+    background: #fff; color: var(--ce-navy-deep); font-weight: 600;
   }
   .fixture-banner {
-    background: linear-gradient(135deg, #10233f, #1f3864); color: #fff; border-radius: 12px;
+    background: linear-gradient(135deg, var(--ce-navy-deep), var(--ce-navy-mid)); color: #fff; border-radius: 12px;
     padding: 14px 18px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    border-bottom: 3px solid var(--ce-gold);
   }
-  .fixture-banner .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; }
+  .fixture-banner .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.8; color: var(--ce-gold-pale); }
   .fixture-banner .value { font-size: 17px; font-weight: 600; }
-  nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; border-bottom: 2px solid #e1e6ec; }
+  nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; border-bottom: 2px solid #dfe3ec; }
   nav.tabs button {
     appearance: none; border: none; background: none; padding: 10px 16px; font-size: 14px; font-weight: 600;
     color: #5a6a7e; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px;
   }
-  nav.tabs button.active { color: #1f3864; border-bottom-color: #1f3864; }
+  nav.tabs button.active { color: var(--ce-navy-deep); border-bottom-color: var(--ce-gold); }
   section.panel { display: none; }
   section.panel.active { display: block; }
-  .card { background: #fff; border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(16,35,63,0.08); }
-  .card h2 { font-size: 16px; margin: 0 0 6px; color: #10233f; }
+  .card { background: #fff; border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(13,27,58,0.1); border-top: 3px solid var(--ce-navy); }
+  .card h2 { font-size: 16px; margin: 0 0 6px; color: var(--ce-navy-deep); }
   .card p.desc { font-size: 13px; color: #5a6a7e; margin: 0 0 14px; line-height: 1.5; }
   .stat-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
-  .stat-box { flex: 1; min-width: 130px; background: #f7f9fb; border-radius: 10px; padding: 12px 14px; border: 1px solid #eaeef2; }
-  .stat-box .n { font-size: 22px; font-weight: 700; color: #1f3864; }
+  .stat-box { flex: 1; min-width: 130px; background: var(--ce-bg); border-radius: 10px; padding: 12px 14px; border: 1px solid #e2e7f0; border-left: 3px solid var(--ce-gold); }
+  .stat-box .n { font-size: 22px; font-weight: 700; color: var(--ce-navy-deep); }
   .stat-box .l { font-size: 12px; color: #5a6a7e; margin-top: 2px; }
   .chart-wrap { position: relative; height: 260px; margin-bottom: 6px; }
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 600; }
   .badge.high { background: #dff3e3; color: #1e7b3a; }
-  .badge.medium { background: #fdf1d6; color: #8a6100; }
+  .badge.medium { background: var(--ce-gold-pale); color: var(--ce-gold-dark); }
   .badge.low { background: #fbe4e2; color: #a3352a; }
   .badge.none { background: #ececec; color: #777; }
   table.plain { width: 100%; border-collapse: collapse; font-size: 13px; }
-  table.plain th { text-align: left; background: #1f3864; color: #fff; padding: 8px 10px; }
+  table.plain th { text-align: left; background: var(--ce-navy-deep); color: var(--ce-gold-pale); padding: 8px 10px; border-bottom: 2px solid var(--ce-gold); }
   table.plain td { padding: 7px 10px; border-bottom: 1px solid #eef1f4; }
-  table.plain tr:nth-child(even) td { background: #f7f9fb; }
+  table.plain tr:nth-child(even) td { background: var(--ce-bg); }
   .footer-note { font-size: 12px; color: #8390a1; text-align: center; margin-top: 24px; line-height: 1.6; }
   .batsman-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
   .batsman-picker button {
-    border: 1px solid #c7d0da; background: #fff; padding: 6px 12px; border-radius: 100px; font-size: 12px;
-    cursor: pointer; color: #33445c;
+    border: 1px solid var(--ce-navy-light); background: #fff; padding: 6px 12px; border-radius: 100px; font-size: 12px;
+    cursor: pointer; color: var(--ce-navy-mid); font-weight: 600;
   }
-  .batsman-picker button.active { background: #1f3864; color: #fff; border-color: #1f3864; }
+  .batsman-picker button.active { background: var(--ce-gold); color: var(--ce-navy-deep); border-color: var(--ce-gold); }
   .gridjs-wrapper { border-radius: 10px !important; }
   .wip-ribbon {
     position: fixed; inset: 0; pointer-events: none; z-index: 400; overflow: hidden; display: none;
@@ -6168,7 +6187,7 @@ function render() {
     data: {
       labels: ['Caught', 'Bowled', 'LBW', 'Stumped', 'Run Out'],
       datasets: [{ data: [picked.caught, picked.bowled, picked.lbw, picked.stumped, picked.runOut],
-        backgroundColor: ['#1f3864', '#c0392b', '#e08e0b', '#6c3fa8', '#2e7d4f'] }],
+        backgroundColor: ['#16264a', '#e2a53d', '#47649a', '#9c6c11', '#7a8699'] }],
     },
     options: { responsive: true, maintainAspectRatio: false },
   });
@@ -6187,7 +6206,7 @@ function render() {
     type: 'bar',
     data: {
       labels: ['RA Pace', 'LA Pace', 'RA Spin', 'LA Spin', 'Spin, arm unclear', 'No data'],
-      datasets: [{ label: 'Dismissals (season total)', backgroundColor: ['#1f3864','#3f5b8c','#c0392b','#e08e0b','#b98a3a','#9aa5b1'],
+      datasets: [{ label: 'Dismissals (season total)', backgroundColor: ['#16264a','#47649a','#e2a53d','#9c6c11','#c9a66b','#9aa5b1'],
         data: [totals.raPace, totals.laPace, totals.raSpin, totals.laSpin, totals.spinUnclear, totals.noData] }],
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 2 } } } },
@@ -6205,7 +6224,7 @@ function render() {
     type: 'bar',
     data: {
       labels: team.bowlingThreats.map(x => x.name),
-      datasets: [{ label: 'Wickets', backgroundColor: '#1f3864', data: team.bowlingThreats.map(x => x.wkts) }],
+      datasets: [{ label: 'Wickets', backgroundColor: '#e2a53d', data: team.bowlingThreats.map(x => x.wkts) }],
     },
     options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { stepSize: 2 } } } },
   });
@@ -6222,6 +6241,12 @@ function render() {
 }
 
 render();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
